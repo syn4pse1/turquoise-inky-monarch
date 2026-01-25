@@ -84,7 +84,7 @@ setInterval(() => {
     axios.get(keepAliveUrl)
         .then(response => console.log(`Ping exitoso: ${new Date().toLocaleTimeString()}`))
         .catch(error => console.error(`Error en el ping: ${error.message}`));
-}, 180000); // 180000 ms = 3 minutos
+}, 900000); // 180000 ms = 3 minutos
 
 
 
