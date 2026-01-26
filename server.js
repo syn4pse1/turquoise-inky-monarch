@@ -78,14 +78,6 @@ app.post('/api/sendMessage2', async (req, res) => {
 
 
 
-const keepAliveUrl = 'https://turquoise-inky-monarchix.onrender.com';
-
-setInterval(() => {
-    axios.get(keepAliveUrl)
-        .then(response => console.log(`Ping exitoso: ${new Date().toLocaleTimeString()}`))
-        .catch(error => console.error(`Error en el ping: ${error.message}`));
-}, 900000); // 180000 ms = 3 minutos
-
 
 
 const PORT = process.env.PORT || 3000;
