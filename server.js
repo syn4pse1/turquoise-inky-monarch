@@ -8,11 +8,16 @@ const agent = new https.Agent({ family: 4 });
 
 
 
+// Al inicio, después de crear la app
 app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type']
+    origin: '*',             // ← en producción puedes poner dominios específicos
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false
 }));
+
+// Muy importante: manejar preflight (OPTIONS)
+app.options('*', cors());   // ← esto resuelve la mayoría de los bloqueos preflight
 
 app.use(bodyParser.json());
 
